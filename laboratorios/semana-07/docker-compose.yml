@@ -1,9 +1,15 @@
-# Uso:
-#   docker compose run --rm pipeline make setup      # una sola vez: crea objetos en Snowflake
-#   docker compose run --rm pipeline                 # ingesta + dbt build (Bronze -> Silver -> Gold)
+# Uso (desde un clon limpio, con .env creado a partir de .env.example):
+#   docker compose run --rm pipeline                      # TODO en uno: setup (idempotente) -> ingesta -> dbt build (Bronze -> Silver -> Gold)
+#   docker compose run --rm pipeline make setup           # solo crear/verificar objetos en Snowflake
+#   docker compose run --rm pipeline make full-refresh    # reconstruye Silver/Gold (Bronze no se toca)
+#   docker compose run --rm pipeline make ingest INGEST_ARGS="--strict"   # falla si falta algún mes
 services:
   pipeline:
     build: .
     env_file: .env
     volumes:
       - ./dbt_taxi:/app/dbt_taxi   # persiste target/ (docs, manifest) en tu máquina
+      - type: tmpfs                # los .parquet temporales viven en RAM y se descartan al salir
+        target: /tmp
+        tmpfs:
+          size: 1073741824         # 1 GiB; un mes de Yellow pesa decenas de MB
