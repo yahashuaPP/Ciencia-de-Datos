@@ -1,0 +1,30 @@
+# Secretos: nunca deben entrar a la imagen (compose los inyecta con env_file)
+.env
+.env.*
+!.env.example
+
+# Git / IDE / CI
+.git
+.gitignore
+.github
+.idea
+.vscode
+
+# dbt generado (se recrea en el contenedor o vive en el volumen)
+**/target
+**/dbt_packages
+**/logs
+**/.user.yml
+
+# Python
+**/__pycache__
+**/*.py[cod]
+.venv
+venv
+**/.pytest_cache
+
+# Datos y temporales
+**/*.parquet
+**/*.part
+data
+tmp

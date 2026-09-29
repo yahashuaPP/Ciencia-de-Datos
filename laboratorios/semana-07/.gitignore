@@ -1,0 +1,36 @@
+# --- Credenciales / entorno ---
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*.key
+
+# --- Artefactos generados por dbt ---
+target/
+dbt_packages/
+dbt_modules/
+logs/
+.user.yml
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Datos y temporales (los seeds .csv de dbt SÍ se versionan) ---
+*.parquet
+*.part
+data/
+tmp/
+
+# --- SO / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

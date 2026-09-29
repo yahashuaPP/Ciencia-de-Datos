@@ -1,0 +1,15 @@
+dbt_taxi:
+  target: prod
+  outputs:
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'TAXI_ROLE') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TAXI_WH') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'TAXI_DB') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'SILVER') }}"
+      threads: "{{ env_var('DBT_THREADS', '4') | as_number }}"
+      connect_retries: 3
+      client_session_keep_alive: false
