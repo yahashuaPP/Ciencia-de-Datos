@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: silver_zone_lookup
+    description: "Catálogo de zonas de taxi de la TLC, limpio y con nombres estandarizados."
+    columns:
+      - name: location_id
+        description: "PK del catálogo de zonas (1-265)."
+        data_tests:
+          - unique
+          - not_null
+
+  - name: silver_trips
+    description: >
+      Un registro por viaje de yellow taxi, limpio, tipado, deduplicado y con nombres
+      estandarizados. Ver los comentarios del .sql para el detalle y justificación de
+      cada decisión de limpieza.
+    columns:
+      - name: trip_key
+        description: "Llave sustituta del viaje (hash de archivo de origen + fila de origen)."
+        data_tests:
+          - unique
+          - not_null
+      - name: vendor_id
+        data_tests:
+          - not_null
+      - name: pickup_datetime
+        data_tests:
+          - not_null
+      - name: dropoff_datetime
+        data_tests:
+          - not_null
+      - name: pu_location_id
+        data_tests:
+          - not_null
+      - name: do_location_id
+        data_tests:
+          - not_null
+      - name: rate_code_id
+        data_tests:
+          - not_null
+      - name: payment_type_id
+        data_tests:
+          - not_null

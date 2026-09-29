@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: BRONZE
+    description: >
+      Capa Bronze: datos cargados directamente desde los archivos originales de la NYC TLC
+      (COPY INTO con MATCH_BY_COLUMN_NAME), sin transformar, más metadata de carga añadida
+      por el pipeline de ingesta (`ingestion/run.py`).
+    tables:
+      - name: raw_yellow_tripdata
+        description: >
+          Un registro por viaje de yellow taxi, tal como lo entrega la TLC, más metadata de
+          linaje: _source_file (archivo/periodo de origen), _source_row_number (fila dentro
+          del archivo) y _loaded_at (fecha/hora de carga).
+        columns:
+          - name: tpep_pickup_datetime
+            data_tests:
+              - not_null
+          - name: tpep_dropoff_datetime
+            data_tests:
+              - not_null
+          - name: _source_file
+            description: "Metadata de linaje: nombre del archivo de origen en el stage (METADATA$FILENAME)."
+            data_tests:
+              - not_null
+          - name: _loaded_at
+            description: "Metadata de linaje: fecha/hora en que Snowflake cargó la fila (METADATA$START_SCAN_TIME)."
+
+      - name: ingestion_log
+        description: >
+          Un registro por mes cargado exitosamente a raw_yellow_tripdata. Lo usa
+          `ingestion/run.py` para saber qué meses ya están cargados y no recargarlos.
+        columns:
+          - name: source_period
+            data_tests:
+              - unique
+              - not_null

@@ -1,0 +1,34 @@
+name: 'dbt_taxi'
+version: '1.0.0'
+config-version: 2
+profile: 'dbt_taxi'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Rango del laboratorio: enero 2025 - agosto 2026 (20 meses). dim_date se acota a esto.
+  taxi_start_date: '2025-01-01'
+  taxi_end_date: '2026-08-31'
+
+seeds:
+  dbt_taxi:
+    taxi_zone_lookup:
+      +schema: bronze        # catálogo de referencia tal cual lo publica la TLC (capa Bronze)
+      +column_types:
+        locationid: NUMBER(38,0)
+        borough: VARCHAR(50)
+        zone: VARCHAR(100)
+        service_zone: VARCHAR(50)
+
+models:
+  dbt_taxi:
+    silver:
+      +materialized: table
+      +schema: silver
+    gold:
+      +materialized: table
+      +schema: gold

@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Una fila por día calendario (2025-01-01 a 2026-08-31). PK: date_key."
+    columns:
+      - name: date_key
+        description: "Fecha como número YYYYMMDD."
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_time
+    description: "Una fila por hora del día (0-23). PK: hour_key."
+    columns:
+      - name: hour_key
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_location
+    description: "Una fila por zona de taxi de la TLC (265 zonas). PK: location_id."
+    columns:
+      - name: location_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_vendor
+    description: "Catálogo estático de proveedores TPEP. PK: vendor_id."
+    columns:
+      - name: vendor_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_rate_code
+    description: "Catálogo estático de tarifas (RatecodeID). PK: rate_code_id."
+    columns:
+      - name: rate_code_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_payment_type
+    description: "Catálogo estático de medios de pago. PK: payment_type_id."
+    columns:
+      - name: payment_type_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: fct_trips
+    description: >
+      Tabla de hechos: un registro por viaje individual de yellow taxi. FKs hacia las seis
+      dimensiones; métricas de distancia, duración y desglose de tarifa.
+    columns:
+      - name: trip_key
+        description: "PK de la tabla de hechos."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: pickup_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: dropoff_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: pickup_hour_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: hour_key
+      - name: dropoff_hour_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: hour_key
+
+      - name: pu_location_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_id
+      - name: do_location_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_id
+
+      - name: vendor_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_vendor')
+              field: vendor_id
+
+      - name: rate_code_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_rate_code')
+              field: rate_code_id
+
+      - name: payment_type_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_payment_type')
+              field: payment_type_id
