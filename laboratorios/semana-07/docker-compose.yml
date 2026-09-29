@@ -1,0 +1,9 @@
+# Uso:
+#   docker compose run --rm pipeline make setup      # una sola vez: crea objetos en Snowflake
+#   docker compose run --rm pipeline                 # ingesta + dbt build (Bronze -> Silver -> Gold)
+services:
+  pipeline:
+    build: .
+    env_file: .env
+    volumes:
+      - ./dbt_taxi:/app/dbt_taxi   # persiste target/ (docs, manifest) en tu máquina
