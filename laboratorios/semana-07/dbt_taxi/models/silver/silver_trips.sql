@@ -9,10 +9,16 @@
        - Las marcas de tiempo ya llegan como TIMESTAMP_NTZ desde el COPY INTO de Bronze.
 
     2) DUPLICADOS
-       - El dataset de la TLC tiene, ocasionalmente, filas repetidas dentro del mismo archivo
-         mensual (problema de calidad documentado del origen). Como no existe un ID de viaje
-         nativo, se deduplica por una llave de negocio (vendor + horarios + zonas + distancia +
-         importe total) quedándonos con la carga más reciente (_loaded_at desc) en caso de empate.
+       - El dataset de la TLC trae, ocasionalmente, filas repetidas dentro del mismo archivo
+         mensual. No existe un ID de viaje nativo, así que se deduplica por una llave de negocio
+         (vendor + horarios + zonas + distancia + importe total): dos filas que coinciden en todo
+         eso se tratan como el mismo viaje registrado dos veces.
+       - Se conserva la PRIMERA aparición (archivo y número de fila más bajos). El orden es
+         determinista: dos corridas eligen siempre la misma fila y el trip_key no cambia.
+         (Ordenar por _loaded_at no desempata: todas las filas de un archivo tienen el mismo.)
+       - Las recargas de un mes completo no generan duplicados aquí: la ingesta borra el mes
+         antes del COPY INTO, dentro de la misma transacción.
+       - Evidencia: analyses/data_quality_profile.sql (Q03).
 
     3) VALORES NULOS
        - Cargos aditivos opcionales (extra, mta_tax, peajes, recargo de mejora, tarifas de
@@ -62,7 +68,7 @@ deduplicated as (
             partition by
                 vendorid, tpep_pickup_datetime, tpep_dropoff_datetime,
                 pulocationid, dolocationid, trip_distance, total_amount
-            order by _loaded_at desc
+            order by _source_file, _source_row_number
         ) as _dedup_rank
     from source
 
@@ -72,8 +78,9 @@ cleaned as (
 
     select
         -- No existe un ID de viaje nativo en el dataset de TLC: se deriva una llave sustituta
-        -- de la posición física de la fila en el archivo de origen, garantizando unicidad
-        -- incluso si dos viajes reales comparten todos sus atributos de negocio.
+        -- de la posición física de la fila en el archivo de origen (archivo + número de fila).
+        -- Es única por construcción y estable entre corridas, porque la deduplicación de arriba
+        -- siempre conserva la misma fila.
         {{ dbt_utils.generate_surrogate_key(['_source_file', '_source_row_number']) }} as trip_key,
 
         case when vendorid in (1, 2, 6, 7) then vendorid::number(38, 0) else -1 end as vendor_id,

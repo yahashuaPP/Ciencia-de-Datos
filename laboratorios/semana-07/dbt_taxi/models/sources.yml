@@ -14,12 +14,18 @@ sources:
           linaje: _source_file (archivo/periodo de origen), _source_row_number (fila dentro
           del archivo) y _loaded_at (fecha/hora de carga).
         columns:
+          # warn y no error: Silver ya descarta los viajes sin fechas. Si este test fallara con
+          # severidad error, dbt build se detendría antes de llegar a la limpieza que lo resuelve.
           - name: tpep_pickup_datetime
             data_tests:
-              - not_null
+              - not_null:
+                  config:
+                    severity: warn
           - name: tpep_dropoff_datetime
             data_tests:
-              - not_null
+              - not_null:
+                  config:
+                    severity: warn
           - name: _source_file
             description: "Metadata de linaje: nombre del archivo de origen en el stage (METADATA$FILENAME)."
             data_tests:

@@ -19,8 +19,9 @@ erDiagram
         int pickup_date_key FK
         int dropoff_date_key FK
         int pickup_hour_key FK
-        int do_location_key FK
+        int dropoff_hour_key FK
         int pu_location_key FK
+        int do_location_key FK
         int vendor_key FK
         int rate_code_key FK
         int payment_type_key FK
@@ -47,6 +48,7 @@ erDiagram
         int quarter
         int month
         string month_name
+        int day_of_month
         int day_of_week
         string day_name
         boolean is_weekend

@@ -1,5 +1,8 @@
 version: 2
 
+# Tests de Silver: llaves (unique / not_null) y reglas reales del dominio TLC. Cada regla de
+# limpieza de silver_trips.sql tiene aquí un test que comprueba que se cumplió.
+
 models:
   - name: silver_zone_lookup
     description: "Catálogo de zonas de taxi de la TLC, limpio y con nombres estandarizados."
@@ -15,6 +18,10 @@ models:
       Un registro por viaje de yellow taxi, limpio, tipado, deduplicado y con nombres
       estandarizados. Ver los comentarios del .sql para el detalle y justificación de
       cada decisión de limpieza.
+    data_tests:
+      # Regla: un viaje no puede terminar antes de empezar.
+      - dbt_utils.expression_is_true:
+          expression: "dropoff_datetime >= pickup_datetime"
     columns:
       - name: trip_key
         description: "Llave sustituta del viaje (hash de archivo de origen + fila de origen)."
@@ -22,23 +29,66 @@ models:
           - unique
           - not_null
       - name: vendor_id
+        description: "Proveedor TPEP; -1 = fuera del dominio documentado."
         data_tests:
           - not_null
+          - accepted_values:
+              values: [1, 2, 6, 7, -1]
+              quote: false
       - name: pickup_datetime
         data_tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: "'{{ var('taxi_start_date') }}'::timestamp_ntz"
+              max_value: "dateadd(day, 1, '{{ var('taxi_end_date') }}'::timestamp_ntz)"
       - name: dropoff_datetime
         data_tests:
           - not_null
+      - name: trip_duration_minutes
+        description: "Duración en minutos; Silver descarta viajes de más de 24 h."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1440
+      - name: trip_distance_miles
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: fare_amount
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_amount
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
       - name: pu_location_id
         data_tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 265
       - name: do_location_id
         data_tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 265
       - name: rate_code_id
         data_tests:
           - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 99]
+              quote: false
       - name: payment_type_id
         data_tests:
           - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6]
+              quote: false
+      - name: store_and_fwd_flag
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Y', 'N']

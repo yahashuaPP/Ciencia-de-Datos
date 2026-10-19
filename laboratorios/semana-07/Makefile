@@ -3,7 +3,7 @@ INGEST_ARGS ?=
 
 .DEFAULT_GOAL := pipeline
 .NOTPARALLEL:   # el orden setup -> ingest -> build es obligatorio; nunca en paralelo
-.PHONY: setup ingest deps build docs pipeline full-refresh clean
+.PHONY: setup ingest deps build docs pipeline full-refresh quality clean
 
 setup:            ## Crea rol, warehouse, DB, esquemas, stage y tablas Bronze (idempotente)
 	python -m infra.setup_snowflake
@@ -24,6 +24,10 @@ pipeline: setup ingest build   ## Desde cero o día a día: setup (idempotente) 
 
 full-refresh: setup ingest deps   ## Reconstruye Silver/Gold desde Bronze (no toca Bronze)
 	$(DBT) build --full-refresh
+
+quality: deps     ## Perfil de calidad de Bronze -> docs/calidad_datos.md (evidencia de la limpieza)
+	$(DBT) compile --select data_quality_profile
+	python -m infra.run_profile
 
 clean:            ## Limpia artefactos de dbt del volumen
 	rm -rf dbt_taxi/target dbt_taxi/dbt_packages dbt_taxi/logs

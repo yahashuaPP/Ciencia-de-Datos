@@ -1,6 +1,11 @@
 {#
     GOLD - dim_date: una fila por día, acotada al rango del laboratorio
-    (var taxi_start_date .. taxi_end_date, ver dbt_project.yml).
+    (var taxi_start_date .. taxi_end_date, ver dbt_project.yml) MÁS un día extra.
+
+    El día extra existe porque silver_trips filtra por fecha de RECOGIDA: un viaje que empieza
+    el 31-08-2026 a las 23:50 y termina el 01-09-2026 es válido, y su dropoff_date_key
+    (20260901) tiene que existir aquí o el test relationships de fct_trips falla.
+    Como Silver descarta viajes de más de 24 h, un día extra siempre alcanza.
 #}
 
 with spine as (
@@ -8,7 +13,7 @@ with spine as (
     {{ dbt_utils.date_spine(
         datepart="day",
         start_date="cast('" ~ var('taxi_start_date') ~ "' as date)",
-        end_date="dateadd(day, 1, cast('" ~ var('taxi_end_date') ~ "' as date))"
+        end_date="dateadd(day, 2, cast('" ~ var('taxi_end_date') ~ "' as date))"
     ) }}
 
 )
